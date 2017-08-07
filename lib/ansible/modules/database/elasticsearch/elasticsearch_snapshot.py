@@ -1,5 +1,5 @@
 #!/usr/bin/python3
-# elasticsearch_snapshot: Do snapshots of elasticsearch indices to S3
+# elasticsearch_snapshot: Do snapshots of elasticsearch indices
 #
 # Copyright (C) 2017 Lyz <lyz@riseup.net>
 # This program is free software; you can redistribute it and/or modify
@@ -41,7 +41,6 @@ options:
         description:
           - Name of the snapshot
         required: true
-        type: str
     indices:
         description:
           - Create a snapshot of just the selected indices
@@ -50,7 +49,6 @@ options:
         description:
           - url to the snapshot repository (not just the elasticsearch)
         required: true
-        type: str
 author: Lyz (@lyz-code)
 '''
 
@@ -60,7 +58,7 @@ EXAMPLES = '''
     name: elasticsearch_snapshot
     state: present
     name: full-snapshot
-    snapshot_repository_url: http://localhost:9200/_snapshot/s3_repository
+    snapshot_repository_url: http://localhost:9200/_snapshot/backups
 
 - name: Create snapshot of an indice
   modulename:
@@ -68,7 +66,7 @@ EXAMPLES = '''
     state: present
     name: one-indice-snapshot
     indices: really-interesting-indice
-    snapshot_repository_url: http://localhost:9200/_snapshot/s3_repository
+    snapshot_repository_url: http://localhost:9200/_snapshot/backups
 
 - name: Create snapshot of a list of  indices
   modulename:
@@ -78,7 +76,7 @@ EXAMPLES = '''
     indices:
         - really-interesting-indice
         - another-interesting-indice
-    snapshot_repository_url: http://localhost:9200/_snapshot/s3_repository
+    snapshot_repository_url: http://localhost:9200/_snapshot/backups
 
 - name: Delete snapshot of an indice
   modulename:
@@ -86,7 +84,7 @@ EXAMPLES = '''
     state: absent
     name: one-indice-snapshot
     indices: really-interesting-indice
-    snapshot_repository_url: http://localhost:9200/_snapshot/s3_repository
+    snapshot_repository_url: http://localhost:9200/_snapshot/backups
 '''
 
 RETURN = ''' # '''
@@ -118,7 +116,10 @@ def create_snapshot(data):
     snapshot_url = snapshot_url + '?pretty?wait_for_completion=true'
 
     try:
-        if data['indices']:
+        if data['indices'] is None:
+            payload = {"ignore_unavailable": True,
+                       "include_global_state": False}
+        else:
             payload = {"indices": data['indices'],
                        "ignore_unavailable": True,
                        "include_global_state": False}
