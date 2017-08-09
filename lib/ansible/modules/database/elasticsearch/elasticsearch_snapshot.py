@@ -1,5 +1,5 @@
 #!/usr/bin/python3
-# elasticsearch_snapshot: Do snapshots of elasticsearch indices
+# elasticsearch_snapshot: Do snapshots of elasticsearch indexes
 #
 # Copyright (C) 2017 Lyz <lyz@riseup.net>
 # This program is free software; you can redistribute it and/or modify
@@ -23,8 +23,8 @@ ANSIBLE_METADATA = {'metadata_version': '1.0',
 DOCUMENTATION = '''
 ---
 module: elasticsearch_snapshot
-short_description: Do snapshots of elasticsearch indices
-description: Do snapshots of elasticsearch indices
+short_description: Do snapshots of elasticsearch indexes
+description: Do snapshots of elasticsearch indexes
 version_added: '2.5'
 requirements:
   - "python >= 3.0"
@@ -41,9 +41,9 @@ options:
         description:
           - Name of the snapshot
         required: true
-    indices:
+    indexes:
         description:
-          - Create a snapshot of just the selected indices
+          - Create a snapshot of just the selected indexes
         required: false
     snapshot_repository_url:
         description:
@@ -53,37 +53,37 @@ author: Lyz (@lyz-code)
 '''
 
 EXAMPLES = '''
-- name: Create snapshot of all the indices
+- name: Create snapshot of all the indexes
   modulename:
     name: elasticsearch_snapshot
     state: present
     name: full-snapshot
     snapshot_repository_url: http://localhost:9200/_snapshot/backups
 
-- name: Create snapshot of an indice
+- name: Create snapshot of an index
   modulename:
     name: elasticsearch_snapshot
     state: present
-    name: one-indice-snapshot
-    indices: really-interesting-indice
+    name: one-index-snapshot
+    indexes: really-interesting-index
     snapshot_repository_url: http://localhost:9200/_snapshot/backups
 
-- name: Create snapshot of a list of  indices
+- name: Create snapshot of a list of  indexes
   modulename:
     name: elasticsearch_snapshot
     state: present
-    name: two-indice-snapshot
-    indices:
-        - really-interesting-indice
-        - another-interesting-indice
+    name: two-index-snapshot
+    indexes:
+        - really-interesting-index
+        - another-interesting-index
     snapshot_repository_url: http://localhost:9200/_snapshot/backups
 
-- name: Delete snapshot of an indice
+- name: Delete snapshot of an index
   modulename:
     name: elasticsearch_snapshot
     state: absent
-    name: one-indice-snapshot
-    indices: really-interesting-indice
+    name: one-index-snapshot
+    indexes: really-interesting-index
     snapshot_repository_url: http://localhost:9200/_snapshot/backups
 '''
 
@@ -116,11 +116,11 @@ def create_snapshot(data):
     snapshot_url = snapshot_url + '?pretty?wait_for_completion=true'
 
     try:
-        if data['indices'] is None:
+        if data['indexes'] is None:
             payload = {"ignore_unavailable": True,
                        "include_global_state": False}
         else:
-            payload = {"indices": data['indices'],
+            payload = {"indexes": data['indexes'],
                        "ignore_unavailable": True,
                        "include_global_state": False}
     except KeyError:
@@ -160,7 +160,7 @@ def main():
        argument_spec=dict(
            state=dict(default='present', choices=['present', 'absent']),
            name=dict(required=True, type='str'),
-           indices=dict(required=False),
+           indexes=dict(required=False),
            snapshot_repository_url=dict(required=True, type='str')))
 
     is_error, has_changed, result = choice_map.get(
