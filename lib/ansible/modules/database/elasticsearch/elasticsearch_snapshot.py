@@ -127,7 +127,6 @@ def create_snapshot(data):
         payload = {"ignore_unavailable": True,
                    "include_global_state": False}
     try:
-        import ipdb; ipdb.set_trace()  # XXX BREAKPOINT
         result = requests.put(snapshot_url, json=payload)
     except:
         return True, False, {"status": result.status_code,
