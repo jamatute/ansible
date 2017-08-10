@@ -113,7 +113,7 @@ def create_snapshot(data):
     if snapshot_already_exists(snapshot_url):
         return False, False, {"msg": 'snapshot already exists'}
 
-    snapshot_url = snapshot_url + '?pretty?wait_for_completion=true'
+    snapshot_url = snapshot_url + '?wait_for_completion=true'
 
     try:
         if data['indices'] is None:
