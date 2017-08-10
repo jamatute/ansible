@@ -1,5 +1,5 @@
 #!/usr/bin/python3
-# elasticsearch_snapshot: Do snapshots of elasticsearch indexes
+# elasticsearch_snapshot: Do snapshots of elasticsearch indices
 #
 # Copyright (C) 2017 Lyz <lyz@riseup.net>
 # This program is free software; you can redistribute it and/or modify
@@ -23,8 +23,8 @@ ANSIBLE_METADATA = {'metadata_version': '1.0',
 DOCUMENTATION = '''
 ---
 module: elasticsearch_snapshot
-short_description: Do snapshots of elasticsearch indexes
-description: Do snapshots of elasticsearch indexes
+short_description: Do snapshots of elasticsearch indices
+description: Do snapshots of elasticsearch indices
 version_added: '2.5'
 requirements:
   - "python >= 3.0"
@@ -41,9 +41,9 @@ options:
         description:
           - Name of the snapshot
         required: true
-    indexes:
+    indices:
         description:
-          - Create a snapshot of just the selected indexes
+          - Create a snapshot of just the selected indices
         required: false
     snapshot_repository_url:
         description:
@@ -53,7 +53,7 @@ author: Lyz (@lyz-code)
 '''
 
 EXAMPLES = '''
-- name: Create snapshot of all the indexes
+- name: Create snapshot of all the indices
   modulename:
     name: elasticsearch_snapshot
     state: present
@@ -65,15 +65,15 @@ EXAMPLES = '''
     name: elasticsearch_snapshot
     state: present
     name: one-index-snapshot
-    indexes: really-interesting-index
+    indices: really-interesting-index
     snapshot_repository_url: http://localhost:9200/_snapshot/backups
 
-- name: Create snapshot of a list of  indexes
+- name: Create snapshot of a list of  indices
   modulename:
     name: elasticsearch_snapshot
     state: present
     name: two-index-snapshot
-    indexes:
+    indices:
         - really-interesting-index
         - another-interesting-index
     snapshot_repository_url: http://localhost:9200/_snapshot/backups
@@ -83,14 +83,13 @@ EXAMPLES = '''
     name: elasticsearch_snapshot
     state: absent
     name: one-index-snapshot
-    indexes: really-interesting-index
+    indices: really-interesting-index
     snapshot_repository_url: http://localhost:9200/_snapshot/backups
 '''
 
 RETURN = ''' # '''
 
 
-import json
 import requests
 from ansible.module_utils.basic import AnsibleModule
 
@@ -117,18 +116,17 @@ def create_snapshot(data):
     snapshot_url = snapshot_url + '?pretty?wait_for_completion=true'
 
     try:
-        if data['indexes'] is None:
+        if data['indices'] is None:
             payload = {"ignore_unavailable": True,
                        "include_global_state": False}
         else:
-            payload = {"indexes": data['indexes'],
+            payload = {"indices": data['indices'],
                        "ignore_unavailable": True,
                        "include_global_state": False}
     except KeyError:
         payload = {"ignore_unavailable": True,
                    "include_global_state": False}
     try:
-        import ipdb; ipdb.set_trace()  # XXX BREAKPOINT
         result = requests.put(snapshot_url, json=payload)
     except:
         return True, False, {"status": result.status_code,
@@ -162,7 +160,7 @@ def main():
        argument_spec=dict(
            state=dict(default='present', choices=['present', 'absent']),
            name=dict(required=True, type='str'),
-           indexes=dict(required=False),
+           indices=dict(required=False),
            snapshot_repository_url=dict(required=True, type='str')))
 
     is_error, has_changed, result = choice_map.get(
