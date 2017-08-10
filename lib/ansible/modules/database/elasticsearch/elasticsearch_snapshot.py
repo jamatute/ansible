@@ -119,7 +119,11 @@ def create_snapshot(data):
         if data['indexes'] is None:
             payload = {"ignore_unavailable": True,
                        "include_global_state": False}
-        else:
+        elif type(data['indexes']) is list:
+            payload = {"indexes": ",".join(data['indexes']),
+                       "ignore_unavailable": True,
+                       "include_global_state": False}
+        elif type(data['indexes']) is str:
             payload = {"indexes": data['indexes'],
                        "ignore_unavailable": True,
                        "include_global_state": False}
