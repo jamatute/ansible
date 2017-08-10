@@ -90,8 +90,9 @@ EXAMPLES = '''
 RETURN = ''' # '''
 
 
-from ansible.module_utils.basic import AnsibleModule
+import json
 import requests
+from ansible.module_utils.basic import AnsibleModule
 
 
 def snapshot_already_exists(url):
@@ -119,11 +120,7 @@ def create_snapshot(data):
         if data['indexes'] is None:
             payload = {"ignore_unavailable": True,
                        "include_global_state": False}
-        elif type(data['indexes']) is list:
-            payload = {"indexes": ",".join(data['indexes']),
-                       "ignore_unavailable": True,
-                       "include_global_state": False}
-        elif type(data['indexes']) is str:
+        else:
             payload = {"indexes": data['indexes'],
                        "ignore_unavailable": True,
                        "include_global_state": False}
@@ -131,6 +128,7 @@ def create_snapshot(data):
         payload = {"ignore_unavailable": True,
                    "include_global_state": False}
     try:
+        import ipdb; ipdb.set_trace()  # XXX BREAKPOINT
         result = requests.put(snapshot_url, json=payload)
     except:
         return True, False, {"status": result.status_code,
