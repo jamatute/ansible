@@ -52,7 +52,7 @@ options:
     timeout:
         description:
           - Timeout of the snapshot process in seconds
-        default: 600
+        default: 900
         required: false
     retries:
         description:
@@ -221,7 +221,7 @@ def main():
            state=dict(default='present', choices=['present', 'absent']),
            name=dict(required=True, type='str'),
            indices=dict(required=False, type='list'),
-           timeout=dict(required=False, default=600, type='int'),
+           timeout=dict(required=False, default=900, type='int'),
            retries=dict(required=False, default=3, type='int'),
            sleep=dict(required=False, default=15, type='int'),
            snapshot_repository_url=dict(required=True, type='str')))
