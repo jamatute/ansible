@@ -183,7 +183,6 @@ def create_snapshot(data):
                  'process goes on'}
         try:
             status = snapshot_status(snapshot_url)
-            print('{}: {}'.format(stop_timestamp.isoformat(), status))
         except Exception as e:
             retries+=1
             if retries >= data['retries']:
