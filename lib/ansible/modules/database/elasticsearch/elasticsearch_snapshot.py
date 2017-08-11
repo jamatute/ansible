@@ -49,7 +49,22 @@ options:
         description:
           - url to the snapshot repository (not just the elasticsearch)
         required: true
-author: Lyz (@lyz-code)
+    timeout:
+        description:
+          - Timeout of the snapshot process in seconds
+        default: 600
+        required: false
+    retries:
+        description:
+          - Number of retries of failed http/https requests
+        default: 3
+        required: false
+    sleep:
+        description:
+          - Sleep between checks of the snapshot process
+        default: 15
+        required: false
+author: jamatute (@jamatute)
 '''
 
 EXAMPLES = '''
@@ -58,6 +73,14 @@ EXAMPLES = '''
     name: elasticsearch_snapshot
     state: present
     name: full-snapshot
+    snapshot_repository_url: http://localhost:9200/_snapshot/backups
+
+- name: Create snapshot of all the indices with a specified timeout
+  modulename:
+    name: elasticsearch_snapshot
+    state: present
+    name: full-snapshot
+    timeout: 600
     snapshot_repository_url: http://localhost:9200/_snapshot/backups
 
 - name: Create snapshot of an index
@@ -90,7 +113,10 @@ EXAMPLES = '''
 RETURN = ''' # '''
 
 
+import time
+import json
 import requests
+import datetime
 from ansible.module_utils.basic import AnsibleModule
 
 
@@ -104,6 +130,20 @@ def snapshot_already_exists(url):
     else:
         return False
 
+def snapshot_status(url):
+    "Check if the snapshot already exists"
+
+    try:
+        result = requests.get(url)
+    except Exception as e:
+        raise
+
+    if result.status_code == 200:
+        return json.loads(result.text)['snapshots'][0]['state']
+    else:
+        raise requests.exceptions.ConnectionError('Return code not 200')
+
+
 
 def create_snapshot(data):
     "Create Elasticsearch snapshot"
@@ -112,8 +152,6 @@ def create_snapshot(data):
 
     if snapshot_already_exists(snapshot_url):
         return False, False, {"msg": 'snapshot already exists'}
-
-    snapshot_url = snapshot_url + '?wait_for_completion=true'
 
     try:
         if data['indices'] is None:
@@ -126,12 +164,35 @@ def create_snapshot(data):
     except KeyError:
         payload = {"ignore_unavailable": True,
                    "include_global_state": False}
+
+    start_timestamp = datetime.datetime.now()
     try:
-        result = requests.put(snapshot_url, json=payload)
-    except:
+        result = requests.put(snapshot_url, json=payload,
+                              timeout=data['timeout'])
+    except requests.exceptions.ConnectionError as e:
         return True, False, {"status": result.status_code,
                              "data": result.json()}
-    return False, True, {"status": result.status_code, "data": result.json()}
+
+    retries = 0
+    while True:
+        time.sleep(data['sleep'])
+        stop_timestamp = datetime.datetime.now()
+        if (stop_timestamp - start_timestamp).total_seconds() > data['timeout']:
+            return True, True, \
+                {"msg": 'The job timed out, probably the snapshot' +
+                 'process goes on'}
+        try:
+            status = snapshot_status(snapshot_url)
+            print('{}: {}'.format(stop_timestamp.isoformat(), status))
+        except Exception as e:
+            retries+=1
+            if retries >= data['retries']:
+                return True, True, \
+                    {"msg": 'We reached the maximum number of retries,' +
+                     'but probably the snapshot process goes on'}
+        if status == 'SUCCESS':
+            return False, True, {"status": result.status_code,
+                                 "data": result.json()}
 
 
 def delete_snapshot(data):
@@ -161,6 +222,9 @@ def main():
            state=dict(default='present', choices=['present', 'absent']),
            name=dict(required=True, type='str'),
            indices=dict(required=False, type='list'),
+           timeout=dict(required=False, default=600, type='int'),
+           retries=dict(required=False, default=3, type='int'),
+           sleep=dict(required=False, default=15, type='int'),
            snapshot_repository_url=dict(required=True, type='str')))
 
     is_error, has_changed, result = choice_map.get(
