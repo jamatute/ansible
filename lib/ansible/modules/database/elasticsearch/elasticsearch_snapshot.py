@@ -1,4 +1,4 @@
-#!/usr/bin/python3
+#!/usr/bin/python
 # elasticsearch_snapshot: Do snapshots of elasticsearch indices
 #
 # Copyright (C) 2017 jamatute <jamatute@paradigmadigital.com>
