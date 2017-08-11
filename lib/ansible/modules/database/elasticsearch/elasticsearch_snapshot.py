@@ -27,7 +27,7 @@ short_description: Do snapshots of elasticsearch indices
 description: Do snapshots of elasticsearch indices
 version_added: '2.5'
 requirements:
-  - "python >= 3.0"
+  - python
   - requests
 options:
     state:
